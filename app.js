@@ -64,6 +64,7 @@
     "master.MakeModelId",
     "MatchFound",
     "MakeModelGenerated",
+    "SubCategoryGenerated",
     "Message",
     "Error",
   ];
@@ -900,6 +901,7 @@
       });
 
       const genCol = columns.indexOf("MakeModelGenerated") + 1;
+      const subCatGenCol = columns.indexOf("SubCategoryGenerated") + 1;
       const matchCol = columns.indexOf("MatchFound") + 1;
       const errorCol = columns.indexOf("Error") + 1;
       const costCol = columns.indexOf("Cost") + 1;
@@ -916,14 +918,15 @@
         if (typeof cell.value === "number") cell.numFmt = "#,##0";
       }
 
-      if (genCol > 0) {
-        const cell = row.getCell(genCol);
+      [genCol, subCatGenCol].forEach((colIdx) => {
+        if (colIdx <= 0) return;
+        const cell = row.getCell(colIdx);
         if (cell.value === "Y") {
           cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFEF3C7" } };
         } else if (cell.value === "N") {
           cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD1FAE5" } };
         }
-      }
+      });
       if (matchCol > 0) {
         const cell = row.getCell(matchCol);
         if (cell.value === "N") {
@@ -1218,14 +1221,23 @@
     let matched = 0;
     let generated = 0;
     let existing = 0;
+    let subCategoryGenerated = 0;
     let notFound = 0;
     (results || []).forEach((r) => {
       if (r.MatchFound === "N") notFound += 1;
       else matched += 1;
       if (r.MakeModelGenerated === "Y") generated += 1;
       else if (r.MakeModelGenerated === "N") existing += 1;
+      if (r.SubCategoryGenerated === "Y") subCategoryGenerated += 1;
     });
-    return { total: (results || []).length, matched, generated, existing, notFound };
+    return {
+      total: (results || []).length,
+      matched,
+      generated,
+      existing,
+      subCategoryGenerated,
+      notFound,
+    };
   }
 
   function renderResults() {
@@ -1236,6 +1248,7 @@
       { label: "Total", value: stats.total, cls: "" },
       { label: "Matched", value: stats.matched, cls: "stat-card--matched" },
       { label: "Generated MakeModel", value: stats.generated, cls: "stat-card--generated" },
+      { label: "Generated SubCategory", value: stats.subCategoryGenerated, cls: "stat-card--subcat-generated" },
       { label: "Existing MakeModel", value: stats.existing, cls: "stat-card--existing" },
       { label: "Not Found", value: stats.notFound, cls: "stat-card--notfound" },
     ];
@@ -1268,7 +1281,12 @@
       columns.forEach((h) => {
         const v = flat[h];
         const td = el("td");
-        if (h === "MatchFound" || h === "MakeModelGenerated" || (h === "Error" && v != null)) {
+        if (
+          h === "MatchFound" ||
+          h === "MakeModelGenerated" ||
+          h === "SubCategoryGenerated" ||
+          (h === "Error" && v != null)
+        ) {
           const badge = el("span", {
             className: badgeClass(h, v),
             text: v == null ? "" : String(v),
@@ -1299,7 +1317,7 @@
   }
 
   function badgeClass(field, value) {
-    if (field === "MakeModelGenerated") {
+    if (field === "MakeModelGenerated" || field === "SubCategoryGenerated") {
       if (value === "Y") return "badge badge--amber";
       if (value === "N") return "badge badge--green";
     }

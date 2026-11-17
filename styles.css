@@ -1070,6 +1070,12 @@ pre {
   --tone-icon: var(--icon-plus-square);
 }
 
+.stat-card--subcat-generated {
+  --tone: var(--warning);
+  --tone-soft: var(--warning-soft);
+  --tone-icon: var(--icon-plus-square);
+}
+
 .stat-card--existing {
   --tone: var(--accent);
   --tone-soft: var(--accent-soft);
